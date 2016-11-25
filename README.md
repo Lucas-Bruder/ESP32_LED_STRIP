@@ -1,4 +1,7 @@
 # ESP32 LED Strip library
 
 ## Description
-ESP32 addressable LED library. Right now relies on bit-banging, but planning on migrating to RMT to generate waveforms. Trying to keep the public interface the same, but expect a good amount of changes in led_strip.c. 
+This library can be used to drive LED strips from the ESP32 using the RMT peripheral. This allows the RMT peripheral to handle all of the transmission while the processor is free to support other tasks.
+
+## Limitations
+Right now the library only supports the timing for WS2812/WS2812B LED strips. I believe most of the Adafruit Neopixel strips use these LED drivers. However, adding functionality for other LED strips with single-wire data like the SK6812 or WS2811 should be easily achievable. I don't currently have access to any of these LED strips, but I can add support for these in the near future.

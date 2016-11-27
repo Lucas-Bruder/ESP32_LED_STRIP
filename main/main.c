@@ -32,6 +32,7 @@ int app_main(void)
         .led_strip_buf_2 = led_strip_buf_2,
         .led_strip_length = LED_STRIP_LENGTH
     };
+    led_strip.access_semaphore = xSemaphoreCreateBinary();
 
     bool led_init_ok = led_strip_init(&led_strip);
     assert(led_init_ok);

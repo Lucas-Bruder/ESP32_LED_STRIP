@@ -106,30 +106,45 @@ static void led_strip_fill_rmt_items(struct led_color_t *led_strip_buf, rmt_item
 static void led_strip_task(void *arg)
 {
     struct led_strip_t *led_strip = (struct led_strip_t *)arg;
-    portMUX_TYPE mux;
-    vPortCPUInitializeMutex(&mux);
 
     size_t num_items_malloc = (LED_STRIP_NUM_RMT_ITEMS_PER_LED * led_strip->led_strip_length);
     rmt_item32_t *rmt_items = (rmt_item32_t*) malloc(sizeof(rmt_item32_t) * num_items_malloc);
+
+    bool make_new_rmt_items = true;
+    bool prev_showing_buf_1 = !led_strip->showing_buf_1;
 
     if (!rmt_items) {
         vTaskDelete(NULL);
     }
 
     for(;;) {
-        taskENTER_CRITICAL(&mux);
-
         rmt_wait_tx_done(led_strip->rmt_channel);
-        // TODO add logic so this isn't called every single time if previous loop was showing buf 1
-        if (led_strip->showing_buf_1) {
-            led_strip_fill_rmt_items(led_strip->led_strip_buf_1, rmt_items, led_strip->led_strip_length);
+        xSemaphoreTake(led_strip->access_semaphore, portMAX_DELAY);
+
+        /*
+         * If buf 1 was previously being shown and now buf 2 is being shown,
+         * it should update the new rmt items array. If buf 2 was previous being shown
+         * and now buf 1 is being shown, it should update the new rmt items array.
+         * Otherwise, no need to update the array
+         */
+        if ((prev_showing_buf_1 == true) && (led_strip->showing_buf_1 == false)) {
+            make_new_rmt_items = true;
+        } else if ((prev_showing_buf_1 == false) && (led_strip->showing_buf_1 == true)) {
+            make_new_rmt_items = true;
         } else {
-            led_strip_fill_rmt_items(led_strip->led_strip_buf_2, rmt_items, led_strip->led_strip_length);
+            make_new_rmt_items = false;
+        }
+
+        if (make_new_rmt_items) {
+            if (led_strip->showing_buf_1) {
+                led_strip_fill_rmt_items(led_strip->led_strip_buf_1, rmt_items, led_strip->led_strip_length);
+            } else {
+                led_strip_fill_rmt_items(led_strip->led_strip_buf_2, rmt_items, led_strip->led_strip_length);
+            }
         }
 
         rmt_write_items(led_strip->rmt_channel, rmt_items, num_items_malloc, false);
-
-        taskEXIT_CRITICAL(&mux);
+        xSemaphoreGive(led_strip->access_semaphore);
         vTaskDelay(LED_STRIP_REFRESH_PERIOD_MS / portTICK_PERIOD_MS);
     }
 
@@ -179,7 +194,8 @@ bool led_strip_init(struct led_strip_t *led_strip)
         (led_strip->gpio > GPIO_NUM_33) ||  // only inputs above 33
         (led_strip->led_strip_buf_1 == NULL) ||
         (led_strip->led_strip_buf_2 == NULL) ||
-        (led_strip->led_strip_length == 0)) {
+        (led_strip->led_strip_length == 0) ||
+        (led_strip->access_semaphore == NULL)) {
         return false;
     }
 
@@ -195,6 +211,7 @@ bool led_strip_init(struct led_strip_t *led_strip)
         return false;
     }
 
+    xSemaphoreGive(led_strip->access_semaphore);
     BaseType_t task_created = xTaskCreate(led_strip_task,
                                             "led_strip_task",
                                             LED_STRIP_TASK_SIZE,
@@ -258,6 +275,7 @@ bool led_strip_show(struct led_strip_t *led_strip)
         return false;
     }
 
+    xSemaphoreTake(led_strip->access_semaphore, portMAX_DELAY);
     if (led_strip->showing_buf_1) {
         led_strip->showing_buf_1 = false;
         memset(led_strip->led_strip_buf_1, 0, sizeof(struct led_color_t) * led_strip->led_strip_length);
@@ -265,6 +283,7 @@ bool led_strip_show(struct led_strip_t *led_strip)
         led_strip->showing_buf_1 = true;
         memset(led_strip->led_strip_buf_2, 0, sizeof(struct led_color_t) * led_strip->led_strip_length);
     }
+    xSemaphoreGive(led_strip->access_semaphore);
 
     return success;
 }

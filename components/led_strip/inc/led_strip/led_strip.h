@@ -42,6 +42,8 @@ struct led_strip_t {
     bool showing_buf_1;
     struct led_color_t *led_strip_buf_1;
     struct led_color_t *led_strip_buf_2; 
+
+    SemaphoreHandle_t access_semaphore;
 };
 
 bool led_strip_init(struct led_strip_t *led_strip);

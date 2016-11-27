@@ -25,7 +25,7 @@ int app_main(void)
     nvs_flash_init();
 
     struct led_strip_t led_strip = {
-        .led_strip_type = LED_STRIP_TYPE_WS2812,
+        .rgb_led_type = RGB_LED_TYPE_WS2812,
         .rmt_channel = RMT_CHANNEL_1,
         .gpio = GPIO_NUM_21,
         .led_strip_buf_1 = led_strip_buf_1,

@@ -26,7 +26,7 @@
 #define LED_STRIP_REFRESH_PERIOD_MS     (30U) // TODO: add as parameter to led_strip_init
 #define LED_STRIP_RMT_INTR_NUM          (19U) // TODO: add some internal tracking to abstract this for multiple led strips
 
-// Each LED is 24 bits of color. For one bit of color, theres a high period and low period.
+// Each LED is 24 bits of color. For one bit of color, theres a time high and time low
 // Each rmt_item32_t has two levels and durations associated with it, so each LED will need 24 rmt_items
 #define LED_STRIP_NUM_RMT_ITEMS_PER_LED (24U)
 
@@ -34,8 +34,8 @@
 #define LED_STRIP_RMT_CLK_DIV (8)
 
 // Each tick is 100ns with a clock divider of 8. 
-// The period for each high bit and low bit are pulled from WS2812 Datasheet and converted to ticks
-// For both bit 1 and 0, 900ns + 300ns = 1200ns, which fits the timing requirement of 1250ns +/- 150ns
+// The time high and time low for 0b and 1b color bits are pulled from WS2812 Datasheet and converted to ticks
+// For both 1b and 0b, 900ns + 300ns = 1200ns, which fits the timing requirement of 1250ns +/- 150ns
 #define LED_STRIP_RMT_TICKS_BIT_1_HIGH 9 // 900ns (900ns +/- 150ns per datasheet)
 #define LED_STRIP_RMT_TICKS_BIT_1_LOW  3 // 300ns (350ns +/- 150ns per datasheet)
 #define LED_STRIP_RMT_TICKS_BIT_0_HIGH 3 // 300ns (350ns +/- 150ns per datasheet)
@@ -158,8 +158,8 @@ static bool led_strip_init_rmt(struct led_strip_t *led_strip)
         }
     };
 
-    esp_err_t err = rmt_config(&rmt_cfg);
-    if (err != ESP_OK) {
+    esp_err_t cfg_ok = rmt_config(&rmt_cfg);
+    if (cfg_ok != ESP_OK) {
         return false;
     }
     esp_err_t install_ok = rmt_driver_install(rmt_cfg.channel, 0, LED_STRIP_RMT_INTR_NUM);

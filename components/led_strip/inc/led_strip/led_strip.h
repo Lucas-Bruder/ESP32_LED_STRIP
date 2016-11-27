@@ -17,10 +17,10 @@
 
 #include <stddef.h>
 
-enum led_strip_type_t {
-    LED_STRIP_TYPE_WS2812 = 0,
+enum rgb_led_type_t {
+    RGB_LED_TYPE_WS2812 = 0,
 
-    LED_STRIP_TYPE_MAX,
+    RGB_LED_TYPE_MAX,
 };
 
 /**
@@ -33,7 +33,7 @@ struct led_color_t {
 };
 
 struct led_strip_t {
-    const enum led_strip_type_t led_strip_type;
+    const enum rgb_led_type_t rgb_led_type;
     rmt_channel_t rmt_channel;
     gpio_num_t gpio;
     const uint32_t led_strip_length;

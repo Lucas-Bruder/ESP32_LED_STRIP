@@ -24,24 +24,24 @@
 #define LED_STRIP_TASK_PRIORITY         (configMAX_PRIORITIES - 1)
 
 #define LED_STRIP_REFRESH_PERIOD_MS     (30U) // TODO: add as parameter to led_strip_init
-#define LED_STRIP_RMT_INTR_NUM          (19U) // TODO: add some internal tracking to abstract this for multiple led strips
 
-// Each LED is 24 bits of color. For one bit of color, theres a time high and time low
-// Each rmt_item32_t has two levels and durations associated with it, so each LED will need 24 rmt_items
-#define LED_STRIP_NUM_RMT_ITEMS_PER_LED (24U)
+#define LED_STRIP_NUM_RMT_ITEMS_PER_LED (24U) // Assumes 24 bit color for each led
 
 // RMT Clock source is @ 80 MHz. Dividing it by 8 gives us 10 MHz frequency, or 100ns period.
 #define LED_STRIP_RMT_CLK_DIV (8)
 
-// Each tick is 100ns with a clock divider of 8. 
-// The time high and time low for 0b and 1b color bits are pulled from WS2812 Datasheet and converted to ticks
-// For both 1b and 0b, 900ns + 300ns = 1200ns, which fits the timing requirement of 1250ns +/- 150ns
-#define LED_STRIP_RMT_TICKS_BIT_1_HIGH 9 // 900ns (900ns +/- 150ns per datasheet)
-#define LED_STRIP_RMT_TICKS_BIT_1_LOW  3 // 300ns (350ns +/- 150ns per datasheet)
-#define LED_STRIP_RMT_TICKS_BIT_0_HIGH 3 // 300ns (350ns +/- 150ns per datasheet)
-#define LED_STRIP_RMT_TICKS_BIT_0_LOW  9 // 900ns (900ns +/- 150ns per datasheet)
+/****************************
+        WS2812 Timing
+ ****************************/
+#define LED_STRIP_RMT_TICKS_BIT_1_HIGH_WS2812 9 // 900ns (900ns +/- 150ns per datasheet)
+#define LED_STRIP_RMT_TICKS_BIT_1_LOW_WS2812  3 // 300ns (350ns +/- 150ns per datasheet)
+#define LED_STRIP_RMT_TICKS_BIT_0_HIGH_WS2812 3 // 300ns (350ns +/- 150ns per datasheet)
+#define LED_STRIP_RMT_TICKS_BIT_0_LOW_WS2812  9 // 900ns (900ns +/- 150ns per datasheet)
 
-inline void led_strip_fill_item_level(rmt_item32_t* item, int high_ticks, int low_ticks)
+// Function pointer for generating waveforms based on different LED drivers
+typedef void (*led_fill_rmt_items_fn)(struct led_color_t *led_strip_buf, rmt_item32_t *rmt_items, uint32_t led_strip_length);
+
+static inline void led_strip_fill_item_level(rmt_item32_t* item, int high_ticks, int low_ticks)
 {
     item->level0 = 1;
     item->duration0 = high_ticks;
@@ -49,25 +49,17 @@ inline void led_strip_fill_item_level(rmt_item32_t* item, int high_ticks, int lo
     item->duration1 = low_ticks;
 }
 
-inline void led_strip_rmt_bit_1(rmt_item32_t* item)
+static inline void led_strip_rmt_bit_1_ws2812(rmt_item32_t* item)
 {
-    led_strip_fill_item_level(item, LED_STRIP_RMT_TICKS_BIT_1_HIGH, LED_STRIP_RMT_TICKS_BIT_1_LOW);
+    led_strip_fill_item_level(item, LED_STRIP_RMT_TICKS_BIT_1_HIGH_WS2812, LED_STRIP_RMT_TICKS_BIT_1_LOW_WS2812);
 }
 
-inline void led_strip_rmt_bit_0(rmt_item32_t* item)
+static inline void led_strip_rmt_bit_0_ws2812(rmt_item32_t* item)
 {
-    led_strip_fill_item_level(item, LED_STRIP_RMT_TICKS_BIT_0_HIGH, LED_STRIP_RMT_TICKS_BIT_0_LOW);
+    led_strip_fill_item_level(item, LED_STRIP_RMT_TICKS_BIT_0_HIGH_WS2812, LED_STRIP_RMT_TICKS_BIT_0_LOW_WS2812);
 }
 
-inline void led_strip_rmt_end(rmt_item32_t* item)
-{
-    item->level0 = 1;
-    item->duration0 = 1;
-    item->level1 = 0;
-    item->duration1 = 0;
-}
-
-static void led_strip_fill_rmt_items(struct led_color_t *led_strip_buf, rmt_item32_t *rmt_items, uint32_t led_strip_length)
+static void led_strip_fill_rmt_items_ws2812(struct led_color_t *led_strip_buf, rmt_item32_t *rmt_items, uint32_t led_strip_length)
 {
     uint32_t rmt_items_index = 0;
     for (uint32_t led_index = 0; led_index < led_strip_length; led_index++) {
@@ -76,27 +68,27 @@ static void led_strip_fill_rmt_items(struct led_color_t *led_strip_buf, rmt_item
         for (uint8_t bit = 8; bit != 0; bit--) {
             uint8_t bit_set = (led_color.green >> (bit - 1)) & 1;
             if(bit_set) {
-                led_strip_rmt_bit_1(&(rmt_items[rmt_items_index]));
+                led_strip_rmt_bit_1_ws2812(&(rmt_items[rmt_items_index]));
             } else {
-                led_strip_rmt_bit_0(&(rmt_items[rmt_items_index]));
+                led_strip_rmt_bit_0_ws2812(&(rmt_items[rmt_items_index]));
             }
             rmt_items_index++;
         }
         for (uint8_t bit = 8; bit != 0; bit--) {
             uint8_t bit_set = (led_color.red >> (bit - 1)) & 1;
             if(bit_set) {
-                led_strip_rmt_bit_1(&(rmt_items[rmt_items_index]));
+                led_strip_rmt_bit_1_ws2812(&(rmt_items[rmt_items_index]));
             } else {
-                led_strip_rmt_bit_0(&(rmt_items[rmt_items_index]));
+                led_strip_rmt_bit_0_ws2812(&(rmt_items[rmt_items_index]));
             }
             rmt_items_index++;
         }
         for (uint8_t bit = 8; bit != 0; bit--) {
             uint8_t bit_set = (led_color.blue >> (bit - 1)) & 1;
             if(bit_set) {
-                led_strip_rmt_bit_1(&(rmt_items[rmt_items_index]));
+                led_strip_rmt_bit_1_ws2812(&(rmt_items[rmt_items_index]));
             } else {
-                led_strip_rmt_bit_0(&(rmt_items[rmt_items_index]));
+                led_strip_rmt_bit_0_ws2812(&(rmt_items[rmt_items_index]));
             }
             rmt_items_index++;
         }
@@ -106,16 +98,26 @@ static void led_strip_fill_rmt_items(struct led_color_t *led_strip_buf, rmt_item
 static void led_strip_task(void *arg)
 {
     struct led_strip_t *led_strip = (struct led_strip_t *)arg;
-
-    size_t num_items_malloc = (LED_STRIP_NUM_RMT_ITEMS_PER_LED * led_strip->led_strip_length);
-    rmt_item32_t *rmt_items = (rmt_item32_t*) malloc(sizeof(rmt_item32_t) * num_items_malloc);
-
+    led_fill_rmt_items_fn led_make_waveform = NULL;
     bool make_new_rmt_items = true;
     bool prev_showing_buf_1 = !led_strip->showing_buf_1;
 
+    size_t num_items_malloc = (LED_STRIP_NUM_RMT_ITEMS_PER_LED * led_strip->led_strip_length);
+    rmt_item32_t *rmt_items = (rmt_item32_t*) malloc(sizeof(rmt_item32_t) * num_items_malloc);
     if (!rmt_items) {
         vTaskDelete(NULL);
     }
+
+    switch (led_strip->rgb_led_type) {
+        case RGB_LED_TYPE_WS2812:
+            led_make_waveform = led_strip_fill_rmt_items_ws2812;
+            break;
+
+        default:
+            // Will avoid keeping it point to NULL
+            led_make_waveform = led_strip_fill_rmt_items_ws2812;
+            break;
+    };
 
     for(;;) {
         rmt_wait_tx_done(led_strip->rmt_channel);
@@ -137,9 +139,9 @@ static void led_strip_task(void *arg)
 
         if (make_new_rmt_items) {
             if (led_strip->showing_buf_1) {
-                led_strip_fill_rmt_items(led_strip->led_strip_buf_1, rmt_items, led_strip->led_strip_length);
+                led_make_waveform(led_strip->led_strip_buf_1, rmt_items, led_strip->led_strip_length);
             } else {
-                led_strip_fill_rmt_items(led_strip->led_strip_buf_2, rmt_items, led_strip->led_strip_length);
+                led_make_waveform(led_strip->led_strip_buf_2, rmt_items, led_strip->led_strip_length);
             }
         }
 
@@ -177,7 +179,7 @@ static bool led_strip_init_rmt(struct led_strip_t *led_strip)
     if (cfg_ok != ESP_OK) {
         return false;
     }
-    esp_err_t install_ok = rmt_driver_install(rmt_cfg.channel, 0, LED_STRIP_RMT_INTR_NUM);
+    esp_err_t install_ok = rmt_driver_install(rmt_cfg.channel, 0, led_strip->rmt_interrupt_num);
     if (install_ok != ESP_OK) {
         return false;
     }

@@ -20,6 +20,8 @@
 static struct led_color_t led_strip_buf_1[LED_STRIP_LENGTH];
 static struct led_color_t led_strip_buf_2[LED_STRIP_LENGTH];
 
+#define LED_STRIP_RMT_INTR_NUM 19
+
 int app_main(void)
 {
     nvs_flash_init();
@@ -27,6 +29,7 @@ int app_main(void)
     struct led_strip_t led_strip = {
         .rgb_led_type = RGB_LED_TYPE_WS2812,
         .rmt_channel = RMT_CHANNEL_1,
+        .rmt_interrupt_num = LED_STRIP_RMT_INTR_NUM,
         .gpio = GPIO_NUM_21,
         .led_strip_buf_1 = led_strip_buf_1,
         .led_strip_buf_2 = led_strip_buf_2,

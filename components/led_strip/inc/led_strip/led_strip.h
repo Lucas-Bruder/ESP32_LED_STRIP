@@ -34,9 +34,21 @@ struct led_color_t {
 
 struct led_strip_t {
     const enum rgb_led_type_t rgb_led_type;
-    rmt_channel_t rmt_channel;
-    gpio_num_t gpio;
     const uint32_t led_strip_length;
+
+    // RMT peripheral settings
+    rmt_channel_t rmt_channel;
+
+    /*
+     * Interrupt table is located in soc.h
+     * As of 11/27/16, reccomended interrupts are:
+     * 9, 12, 13, 17, 18, 19, 20, 21 or 23
+     * Ensure that the same interrupt number isn't used twice
+     * across all libraries
+     */
+    int rmt_interrupt_num;
+
+    gpio_num_t gpio; // Must be less than GPIO_NUM_33
 
     // Double buffering elements
     bool showing_buf_1;

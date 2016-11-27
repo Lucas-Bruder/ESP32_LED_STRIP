@@ -100,7 +100,7 @@ static void led_strip_task(void *arg)
     struct led_strip_t *led_strip = (struct led_strip_t *)arg;
     led_fill_rmt_items_fn led_make_waveform = NULL;
     bool make_new_rmt_items = true;
-    bool prev_showing_buf_1 = led_strip->showing_buf_1;
+    bool prev_showing_buf_1 = !led_strip->showing_buf_1;
 
     size_t num_items_malloc = (LED_STRIP_NUM_RMT_ITEMS_PER_LED * led_strip->led_strip_length);
     rmt_item32_t *rmt_items = (rmt_item32_t*) malloc(sizeof(rmt_item32_t) * num_items_malloc);

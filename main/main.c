@@ -41,21 +41,27 @@ int app_main(void)
     assert(led_init_ok);
 
     struct led_color_t led_color = {
-        .red = 20,
+        .red = 200,
         .green = 0,
-        .blue = 0,
+        .blue = 50,
     };
-    
     for (uint32_t index = 0; index < LED_STRIP_LENGTH; index++) {
         led_strip_set_pixel_color(&led_strip, index, &led_color);
-        led_color.red += 10;
-        led_color.green += 10;
-        led_color.blue -= 10;
+        led_color.red += 2;
+        led_color.green += 2;
+        led_color.blue -= 2;
     }
     led_strip_show(&led_strip);
 
     while (true) {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        for (uint32_t index = 0; index < LED_STRIP_LENGTH; index++) {
+            led_strip_set_pixel_color(&led_strip, index, &led_color);
+            led_color.red += 2;
+            led_color.green += 2;
+            led_color.blue += 20;
+        }
+        led_strip_show(&led_strip);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
     return 0;

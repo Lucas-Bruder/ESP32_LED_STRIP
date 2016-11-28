@@ -61,4 +61,10 @@ Expect more examples in main.c in the near future for use cases excercising all 
 1. Right now the library only supports the timing for WS2812/WS2812B LED strips. I believe most of the Adafruit Neopixel strips use these LED drivers.  The ability to add drivers for other LEDs like the SK6812 and WS2811 is implemented, but I don't have any to test on.
 2. Only supports 30ms refresh period. Will add functionality to make this configurable in the future.
 
-TODO add notes memory limitations
+## Future Goals of Library (in somewhat prioritized order)
+1. Add higher level functions for generating rainbows, bouncing effects, etc.
+2. Somehow clean up led strip c file. This may involve seperating the waveform generation of each kind of LED.
+3. Add support for "LED rooms". An LED room may contain one or more strips covering multiple walls and multiple corners. This would allow very cool LED shows for different setups, such as LEDs bouncing off walls, LEDs mirroring what the other strip is doing parallel or perpendicular to it, etc.
+4. Add support for other LED strips (WS2811, SK6812, etc.)
+5. Add ESP supported logging and ESP checks at the beginning and end of function
+6. Add notes about memory limitations. Right now depending on how its done, there are two buffers that are either stack allocated or statically allocated and another buffer for the rmt items that's malloc'd on the heap.

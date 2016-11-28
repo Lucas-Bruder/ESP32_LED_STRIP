@@ -16,6 +16,7 @@ bool led_strip_init(struct led_strip_t *led_strip);
 Setting individual led colors on an LED strip
 ```c
 bool led_strip_set_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num, struct led_color_t *color);
+bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, uint32_t pixel_num, uint8_t red, uint8_t green, uint8_t blue);
 ```
 
 Updates the LED strip being shown. This switches the buffer currently being used to display the LED strips

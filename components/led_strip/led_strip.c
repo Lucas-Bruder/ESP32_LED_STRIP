@@ -247,6 +247,27 @@ bool led_strip_set_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num
     return set_led_success;
 }
 
+bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, uint32_t pixel_num, uint8_t red, uint8_t green, uint8_t blue)
+{
+    bool set_led_success = true;
+
+    if ((!led_strip) || (pixel_num > led_strip->led_strip_length)) {
+        return false;
+    }
+
+    if (led_strip->showing_buf_1) {
+        led_strip->led_strip_buf_2[pixel_num].red = red;
+        led_strip->led_strip_buf_2[pixel_num].green = green;
+        led_strip->led_strip_buf_2[pixel_num].blue = blue;
+    } else {
+        led_strip->led_strip_buf_1[pixel_num].red = red;
+        led_strip->led_strip_buf_1[pixel_num].green = green;
+        led_strip->led_strip_buf_1[pixel_num].blue = blue;
+    }
+
+    return set_led_success;
+}
+
 bool led_strip_get_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num, struct led_color_t *color)
 {
     bool get_success = true;

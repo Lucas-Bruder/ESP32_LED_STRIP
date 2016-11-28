@@ -64,7 +64,7 @@ bool led_strip_init(struct led_strip_t *led_strip);
  * Sets the pixel at pixel_num to color.
  */
 bool led_strip_set_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num, struct led_color_t *color);
-
+bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, uint32_t pixel_num, uint8_t red, uint8_t green, uint8_t blue);
 /**
  * Get the pixel color at pixel_num for the led strip that is currently being shown! 
  * NOTE: If you call set_pixel_color then get_pixel_color for the same pixel_num, you will not 

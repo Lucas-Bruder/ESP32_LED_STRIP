@@ -45,13 +45,6 @@ int app_main(void)
         .green = 0,
         .blue = 50,
     };
-    for (uint32_t index = 0; index < LED_STRIP_LENGTH; index++) {
-        led_strip_set_pixel_color(&led_strip, index, &led_color);
-        led_color.red += 2;
-        led_color.green += 2;
-        led_color.blue -= 2;
-    }
-    led_strip_show(&led_strip);
 
     while (true) {
         for (uint32_t index = 0; index < LED_STRIP_LENGTH; index++) {

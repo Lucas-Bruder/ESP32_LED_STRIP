@@ -146,6 +146,7 @@ static void led_strip_task(void *arg)
         }
 
         rmt_write_items(led_strip->rmt_channel, rmt_items, num_items_malloc, false);
+        prev_showing_buf_1 = led_strip->showing_buf_1;
         xSemaphoreGive(led_strip->access_semaphore);
         vTaskDelay(LED_STRIP_REFRESH_PERIOD_MS / portTICK_PERIOD_MS);
     }

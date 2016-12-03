@@ -11,6 +11,9 @@
 #ifndef LED_STRIP_H
 #define LED_STRIP_H
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 #include <driver/rmt.h>
 #include <driver/gpio.h>
 #include "freertos/FreeRTOS.h"
@@ -55,10 +58,13 @@ struct led_strip_t {
     struct led_color_t *led_strip_buf_1;
     struct led_color_t *led_strip_buf_2; 
 
+    TaskHandle_t *led_strip_task_handle;
     SemaphoreHandle_t access_semaphore;
+    rmt_item32_t *rmt_items;
 };
 
 bool led_strip_init(struct led_strip_t *led_strip);
+bool led_strip_deinit(struct led_strip_t *led_strip);
 
 /**
  * Sets the pixel at pixel_num to color.

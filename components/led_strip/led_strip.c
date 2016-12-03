@@ -19,6 +19,7 @@
 #include "freertos/task.h"
 
 #include <string.h>
+#include <stdio.h>
 
 #define LED_STRIP_TASK_SIZE             (512)
 #define LED_STRIP_TASK_PRIORITY         (configMAX_PRIORITIES - 1)
@@ -107,6 +108,7 @@ static void led_strip_task(void *arg)
     if (!rmt_items) {
         vTaskDelete(NULL);
     }
+    led_strip->rmt_items = rmt_items;
 
     switch (led_strip->rgb_led_type) {
         case RGB_LED_TYPE_WS2812:
@@ -151,7 +153,7 @@ static void led_strip_task(void *arg)
         vTaskDelay(LED_STRIP_REFRESH_PERIOD_MS / portTICK_PERIOD_MS);
     }
 
-    if (!rmt_items) {
+    if (rmt_items) {
         free(rmt_items);
     }
     vTaskDelete(NULL);
@@ -197,8 +199,7 @@ bool led_strip_init(struct led_strip_t *led_strip)
         (led_strip->gpio > GPIO_NUM_33) ||  // only inputs above 33
         (led_strip->led_strip_buf_1 == NULL) ||
         (led_strip->led_strip_buf_2 == NULL) ||
-        (led_strip->led_strip_length == 0) ||
-        (led_strip->access_semaphore == NULL)) {
+        (led_strip->led_strip_length == 0)) {
         return false;
     }
 
@@ -214,6 +215,10 @@ bool led_strip_init(struct led_strip_t *led_strip)
         return false;
     }
 
+    led_strip->access_semaphore = xSemaphoreCreateBinary();
+    if (!led_strip->access_semaphore) {
+        return false;
+    }
     xSemaphoreGive(led_strip->access_semaphore);
     BaseType_t task_created = xTaskCreate(led_strip_task,
                                             "led_strip_task",
@@ -221,11 +226,42 @@ bool led_strip_init(struct led_strip_t *led_strip)
                                             led_strip,
                                             LED_STRIP_TASK_PRIORITY,
                                             &led_strip_task_handle
-                                         );
-
+                                         );    
     if (!task_created) {
         return false;
     }
+    led_strip->led_strip_task_handle = led_strip_task_handle;
+
+    return true;
+}
+
+bool led_strip_deinit(struct led_strip_t *led_strip)
+{
+    if ((!led_strip) || 
+        (!led_strip->led_strip_task_handle) ||
+        (!led_strip->access_semaphore) || 
+        (!led_strip->rmt_items)) {
+        return false;
+    }
+
+    xSemaphoreTake(led_strip->access_semaphore, portMAX_DELAY);
+    rmt_wait_tx_done(led_strip->rmt_channel);
+    rmt_tx_stop(led_strip->rmt_channel);
+    printf("Before RMT uninstall\n");
+
+
+    esp_err_t uninstall_ok = rmt_driver_uninstall(led_strip->rmt_channel);
+    if (uninstall_ok != ESP_OK) {
+        xSemaphoreGive(led_strip->access_semaphore);
+        return false;
+    }
+    printf("RMT uninstalled ok\n");
+
+    vTaskDelete(led_strip->led_strip_task_handle);
+    free(led_strip->rmt_items);
+
+    xSemaphoreGive(led_strip->access_semaphore);
+    vSemaphoreDelete(led_strip->access_semaphore);
 
     return true;
 }
@@ -295,7 +331,7 @@ bool led_strip_show(struct led_strip_t *led_strip)
 {
     bool success = true;
 
-    if (!led_strip) {
+    if ((!led_strip) || (!led_strip->access_semaphore)) {
         return false;
     }
 

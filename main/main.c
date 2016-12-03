@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 
-#define LED_STRIP_LENGTH 17U
+#define LED_STRIP_LENGTH 300U
 static struct led_color_t led_strip_buf_1[LED_STRIP_LENGTH];
 static struct led_color_t led_strip_buf_2[LED_STRIP_LENGTH];
 
@@ -35,24 +35,59 @@ int app_main(void)
         .led_strip_buf_2 = led_strip_buf_2,
         .led_strip_length = LED_STRIP_LENGTH
     };
-    led_strip.access_semaphore = xSemaphoreCreateBinary();
 
     bool led_init_ok = led_strip_init(&led_strip);
     assert(led_init_ok);
 
     struct led_color_t led_color = {
-        .red = 5,
+        .red = 255,
         .green = 0,
         .blue = 0,
     };
 
-    while (true) {
-        for (uint32_t index = 0; index < LED_STRIP_LENGTH; index++) {
+    int count = 0;
+    for (uint32_t index = 0; index < LED_STRIP_LENGTH; index++) {
             led_strip_set_pixel_color(&led_strip, index, &led_color);
-        }
-        led_strip_show(&led_strip);
+    }   
 
-        led_color.red += 5;
+    led_strip_show(&led_strip);
+
+    while (true) {
+        vTaskDelay(30 / portTICK_PERIOD_MS);
+        count++;
+
+        if (count > 30) {
+            break;
+        }
+    }
+
+    printf("Done\n");
+
+    bool delete_ok = led_strip_deinit(&led_strip);
+    assert(delete_ok);
+
+    count = 0;
+    for (uint32_t index = 0; index < LED_STRIP_LENGTH; index++) {
+            led_strip_set_pixel_color(&led_strip, index, &led_color);
+    }   
+
+    led_strip_show(&led_strip);
+
+    while (true) {
+        vTaskDelay(30 / portTICK_PERIOD_MS);
+        count++;
+
+        if (count > 30) {
+            break;
+        }
+    }
+
+    printf("Done\n");
+
+    delete_ok = led_strip_deinit(&led_strip);
+    assert(delete_ok);
+
+    while (true) {
         vTaskDelay(30 / portTICK_PERIOD_MS);
     }
 

@@ -151,7 +151,7 @@ static void led_strip_task(void *arg)
         vTaskDelay(LED_STRIP_REFRESH_PERIOD_MS / portTICK_PERIOD_MS);
     }
 
-    if (!rmt_items) {
+    if (rmt_items) {
         free(rmt_items);
     }
     vTaskDelete(NULL);

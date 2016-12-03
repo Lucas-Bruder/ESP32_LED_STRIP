@@ -23,8 +23,6 @@
 #define LED_STRIP_TASK_SIZE             (512)
 #define LED_STRIP_TASK_PRIORITY         (configMAX_PRIORITIES - 1)
 
-#define LED_STRIP_REFRESH_PERIOD_MS     (30U) // TODO: add as parameter to led_strip_init
-
 #define LED_STRIP_NUM_RMT_ITEMS_PER_LED (24U) // Assumes 24 bit color for each led
 
 // RMT Clock source is @ 80 MHz. Dividing it by 8 gives us 10 MHz frequency, or 100ns period.
@@ -40,6 +38,11 @@
 
 // Function pointer for generating waveforms based on different LED drivers
 typedef void (*led_fill_rmt_items_fn)(struct led_color_t *led_strip_buf, rmt_item32_t *rmt_items, uint32_t led_strip_length);
+
+static struct led_task_args_t {
+    struct led_strip_t *led_strip;
+    uint32_t refresh_period_ms;
+};
 
 static inline void led_strip_fill_item_level(rmt_item32_t* item, int high_ticks, int low_ticks)
 {
@@ -97,7 +100,11 @@ static void led_strip_fill_rmt_items_ws2812(struct led_color_t *led_strip_buf, r
 
 static void led_strip_task(void *arg)
 {
-    struct led_strip_t *led_strip = (struct led_strip_t *)arg;
+    // FIXME TODO TEST ME!
+    struct led_task_args_t *led_task_args = (struct led_task_args_t *)arg;
+    struct led_strip_t *led_strip = led_task_args->led_strip;
+    uint32_t refresh_period_ms = led_task_args->refresh_period_ms;
+    
     led_fill_rmt_items_fn led_make_waveform = NULL;
     bool make_new_rmt_items = true;
     bool prev_showing_buf_1 = !led_strip->showing_buf_1;
@@ -148,7 +155,7 @@ static void led_strip_task(void *arg)
         rmt_write_items(led_strip->rmt_channel, rmt_items, num_items_malloc, false);
         prev_showing_buf_1 = led_strip->showing_buf_1;
         xSemaphoreGive(led_strip->access_semaphore);
-        vTaskDelay(LED_STRIP_REFRESH_PERIOD_MS / portTICK_PERIOD_MS);
+        vTaskDelay(refresh_period_ms / portTICK_PERIOD_MS);
     }
 
     if (rmt_items) {
@@ -188,7 +195,7 @@ static bool led_strip_init_rmt(struct led_strip_t *led_strip)
     return true;
 }
 
-bool led_strip_init(struct led_strip_t *led_strip)
+bool led_strip_init(struct led_strip_t *led_strip, uint32_t refresh_period_ms)
 {
     TaskHandle_t led_strip_task_handle;
 
@@ -214,11 +221,16 @@ bool led_strip_init(struct led_strip_t *led_strip)
         return false;
     }
 
+    struct led_task_args_t args = {
+        .led_strip = led_strip,
+        .refresh_period_ms = refresh_period_ms
+    };
+
     xSemaphoreGive(led_strip->access_semaphore);
     BaseType_t task_created = xTaskCreate(led_strip_task,
                                             "led_strip_task",
                                             LED_STRIP_TASK_SIZE,
-                                            led_strip,
+                                            &args,
                                             LED_STRIP_TASK_PRIORITY,
                                             &led_strip_task_handle
                                          );

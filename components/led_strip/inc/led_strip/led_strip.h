@@ -58,7 +58,7 @@ struct led_strip_t {
     SemaphoreHandle_t access_semaphore;
 };
 
-bool led_strip_init(struct led_strip_t *led_strip);
+bool led_strip_init(struct led_strip_t *led_strip, uint32_t refresh_period_ms);
 
 /**
  * Sets the pixel at pixel_num to color.

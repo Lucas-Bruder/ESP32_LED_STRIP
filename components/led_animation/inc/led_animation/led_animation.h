@@ -22,7 +22,7 @@
 #define LED_ANIMATION_TICK_RATE_MS 10 
 inline uint32_t led_animation_time_ms_to_num_ticks(uint32_t time_ms) {
 	return time_ms / LED_ANIMATION_TICK_RATE_MS;
-}
+};
 
 struct led_animation_t;
 

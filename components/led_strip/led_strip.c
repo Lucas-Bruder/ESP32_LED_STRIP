@@ -38,6 +38,14 @@
 #define LED_STRIP_RMT_TICKS_BIT_0_HIGH_WS2812 3 // 300ns (350ns +/- 150ns per datasheet)
 #define LED_STRIP_RMT_TICKS_BIT_0_LOW_WS2812  9 // 900ns (900ns +/- 150ns per datasheet)
 
+/****************************
+        SK6812 Timing
+ ****************************/
+#define LED_STRIP_RMT_TICKS_BIT_1_HIGH_SK6812 6
+#define LED_STRIP_RMT_TICKS_BIT_1_LOW_SK6812  6
+#define LED_STRIP_RMT_TICKS_BIT_0_HIGH_SK6812 3
+#define LED_STRIP_RMT_TICKS_BIT_0_LOW_SK6812  9
+
 // Function pointer for generating waveforms based on different LED drivers
 typedef void (*led_fill_rmt_items_fn)(struct led_color_t *led_strip_buf, rmt_item32_t *rmt_items, uint32_t led_strip_length);
 
@@ -47,6 +55,52 @@ static inline void led_strip_fill_item_level(rmt_item32_t* item, int high_ticks,
     item->duration0 = high_ticks;
     item->level1 = 0;
     item->duration1 = low_ticks;
+}
+
+static inline void led_strip_rmt_bit_1_sk6812(rmt_item32_t* item)
+{
+    led_strip_fill_item_level(item, LED_STRIP_RMT_TICKS_BIT_1_HIGH_SK6812, LED_STRIP_RMT_TICKS_BIT_1_LOW_SK6812);
+}
+
+static inline void led_strip_rmt_bit_0_sk6812(rmt_item32_t* item)
+{
+    led_strip_fill_item_level(item, LED_STRIP_RMT_TICKS_BIT_0_HIGH_SK6812, LED_STRIP_RMT_TICKS_BIT_0_LOW_SK6812);
+}
+
+static void led_strip_fill_rmt_items_sk6812(struct led_color_t *led_strip_buf, rmt_item32_t *rmt_items, uint32_t led_strip_length)
+{
+    uint32_t rmt_items_index = 0;
+    for (uint32_t led_index = 0; led_index < led_strip_length; led_index++) {
+        struct led_color_t led_color = led_strip_buf[led_index];
+
+        for (uint8_t bit = 8; bit != 0; bit--) {
+            uint8_t bit_set = (led_color.green >> (bit - 1)) & 1;
+            if(bit_set) {
+                led_strip_rmt_bit_1_sk6812(&(rmt_items[rmt_items_index]));
+            } else {
+                led_strip_rmt_bit_0_sk6812(&(rmt_items[rmt_items_index]));
+            }
+            rmt_items_index++;
+        }
+        for (uint8_t bit = 8; bit != 0; bit--) {
+            uint8_t bit_set = (led_color.red >> (bit - 1)) & 1;
+            if(bit_set) {
+                led_strip_rmt_bit_1_sk6812(&(rmt_items[rmt_items_index]));
+            } else {
+                led_strip_rmt_bit_0_sk6812(&(rmt_items[rmt_items_index]));
+            }
+            rmt_items_index++;
+        }
+        for (uint8_t bit = 8; bit != 0; bit--) {
+            uint8_t bit_set = (led_color.blue >> (bit - 1)) & 1;
+            if(bit_set) {
+                led_strip_rmt_bit_1_sk6812(&(rmt_items[rmt_items_index]));
+            } else {
+                led_strip_rmt_bit_0_sk6812(&(rmt_items[rmt_items_index]));
+            }
+            rmt_items_index++;
+        }
+    }
 }
 
 static inline void led_strip_rmt_bit_1_ws2812(rmt_item32_t* item)
@@ -111,6 +165,10 @@ static void led_strip_task(void *arg)
     switch (led_strip->rgb_led_type) {
         case RGB_LED_TYPE_WS2812:
             led_make_waveform = led_strip_fill_rmt_items_ws2812;
+            break;
+
+        case RGB_LED_TYPE_SK6812:
+            led_make_waveform = led_strip_fill_rmt_items_sk6812;
             break;
 
         default:

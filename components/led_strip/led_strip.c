@@ -238,7 +238,7 @@ static bool led_strip_init_rmt(struct led_strip_t *led_strip)
     if (cfg_ok != ESP_OK) {
         return false;
     }
-    esp_err_t install_ok = rmt_driver_install(rmt_cfg.channel, 0, led_strip->rmt_interrupt_num);
+    esp_err_t install_ok = rmt_driver_install(rmt_cfg.channel, 0, 0);
     if (install_ok != ESP_OK) {
         return false;
     }

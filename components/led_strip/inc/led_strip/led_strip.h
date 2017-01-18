@@ -23,7 +23,8 @@ extern "C" {
 
 enum rgb_led_type_t {
     RGB_LED_TYPE_WS2812 = 0,
-    RGB_LED_TYPE_SK6812,
+    RGB_LED_TYPE_SK6812 = 1,
+    RGB_LED_TYPE_APA106 = 2,
 
     RGB_LED_TYPE_MAX,
 };

@@ -11,6 +11,10 @@
 #ifndef LED_STRIP_H
 #define LED_STRIP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <driver/rmt.h>
 #include <driver/gpio.h>
 #include "freertos/FreeRTOS.h"
@@ -85,5 +89,9 @@ bool led_strip_show(struct led_strip_t *led_strip);
  * Clears the LED strip.
  */
 bool led_strip_clear(struct led_strip_t *led_strip);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LED_STRIP_H

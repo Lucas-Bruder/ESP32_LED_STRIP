@@ -11,6 +11,10 @@
 #ifndef LED_STRIP_H
 #define LED_STRIP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <driver/rmt.h>
 #include <driver/gpio.h>
 #include "freertos/FreeRTOS.h"
@@ -19,7 +23,8 @@
 
 enum rgb_led_type_t {
     RGB_LED_TYPE_WS2812 = 0,
-    RGB_LED_TYPE_SK6812,
+    RGB_LED_TYPE_SK6812 = 1,
+    RGB_LED_TYPE_APA106 = 2,
 
     RGB_LED_TYPE_MAX,
 };
@@ -85,5 +90,9 @@ bool led_strip_show(struct led_strip_t *led_strip);
  * Clears the LED strip.
  */
 bool led_strip_clear(struct led_strip_t *led_strip);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LED_STRIP_H

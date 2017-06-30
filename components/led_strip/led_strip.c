@@ -346,7 +346,7 @@ bool led_strip_init(struct led_strip_t *led_strip)
     return true;
 }
 
-bool led_strip_set_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num, struct led_color_t *color)
+bool led_strip_set_pixel_color(struct led_strip_t *led_strip, const uint32_t pixel_num, const struct led_color_t *color)
 {
     bool set_led_success = true;
 
@@ -363,7 +363,7 @@ bool led_strip_set_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num
     return set_led_success;
 }
 
-bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, uint32_t pixel_num, uint8_t red, uint8_t green, uint8_t blue)
+bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, const uint32_t pixel_num, const uint8_t red, const uint8_t green, const uint8_t blue)
 {
     bool set_led_success = true;
 
@@ -384,7 +384,7 @@ bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, uint32_t pixel_num, 
     return set_led_success;
 }
 
-bool led_strip_get_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num, struct led_color_t *color)
+bool led_strip_get_pixel_color(struct led_strip_t *led_strip, const uint32_t pixel_num, struct led_color_t *color)
 {
     bool get_success = true;
 

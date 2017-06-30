@@ -60,8 +60,16 @@ bool led_strip_init(struct led_strip_t *led_strip);
 /**
  * Sets the pixel at pixel_num to color.
  */
-bool led_strip_set_pixel_color(struct led_strip_t *led_strip, const uint32_t pixel_num, const struct led_color_t *color);
-bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, const uint32_t pixel_num, const uint8_t red, const uint8_t green, const uint8_t blue);
+bool led_strip_set_pixel_color(struct led_strip_t *led_strip, 
+                               const uint32_t pixel_num, 
+                               const struct led_color_t *color);
+
+bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, 
+                             const uint32_t pixel_num, 
+                             const uint8_t red, 
+                             const uint8_t green, 
+                             const uint8_t blue);
+
 /**
  * Get the pixel color at pixel_num for the led strip that is currently being shown! 
  * NOTE: If you call set_pixel_color then get_pixel_color for the same pixel_num, you will not 
@@ -70,7 +78,9 @@ bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, const uint32_t pixel
  *
  * If there is an invalid argument, color will point to NULL and this function will return false.
  */
-bool led_strip_get_pixel_color(struct led_strip_t *led_strip, const uint32_t pixel_num, struct led_color_t *color);
+bool led_strip_get_pixel_color(struct led_strip_t *led_strip, 
+                               const uint32_t pixel_num, 
+                               struct led_color_t *color);
 
 /**
  * Updates the led buffer to be shown using double buffering.

@@ -15,12 +15,12 @@
     and the task will look at buffer 2 for refreshing the LEDs
     ------------------------------------------------------------------------- */
 
-#include "led_strip/led_strip.h"
+#include "led_strip.h"
 #include "freertos/task.h"
 
 #include <string.h>
 
-#define LED_STRIP_TASK_SIZE             (512)
+#define LED_STRIP_TASK_SIZE             (2048)
 #define LED_STRIP_TASK_PRIORITY         (configMAX_PRIORITIES - 1)
 
 #define LED_STRIP_REFRESH_PERIOD_MS     (30U) // TODO: add as parameter to led_strip_init
@@ -346,7 +346,7 @@ bool led_strip_init(struct led_strip_t *led_strip)
     return true;
 }
 
-bool led_strip_set_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num, struct led_color_t *color)
+bool led_strip_set_pixel_color(struct led_strip_t *led_strip, const uint32_t pixel_num, const struct led_color_t *color)
 {
     bool set_led_success = true;
 
@@ -363,7 +363,7 @@ bool led_strip_set_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num
     return set_led_success;
 }
 
-bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, uint32_t pixel_num, uint8_t red, uint8_t green, uint8_t blue)
+bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, const uint32_t pixel_num, const uint8_t red, const uint8_t green, const uint8_t blue)
 {
     bool set_led_success = true;
 
@@ -384,7 +384,7 @@ bool led_strip_set_pixel_rgb(struct led_strip_t *led_strip, uint32_t pixel_num, 
     return set_led_success;
 }
 
-bool led_strip_get_pixel_color(struct led_strip_t *led_strip, uint32_t pixel_num, struct led_color_t *color)
+bool led_strip_get_pixel_color(struct led_strip_t *led_strip, const uint32_t pixel_num, struct led_color_t *color)
 {
     bool get_success = true;
 

@@ -5,6 +5,8 @@
     Last modified: 11/26/2016
     ------------------------------------------------------------------------- */
 
+#include <stdio.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -12,9 +14,8 @@
 #include "esp_task.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
-#include "led_strip/led_strip.h"
 
-#include <stdio.h>
+#include <led_strip.h>
 
 extern void main_led_task(void *args);
 
@@ -40,7 +41,6 @@ void app_main(void)
 
 static struct led_color_t led_strip_buf_1[LED_STRIP_LENGTH];
 static struct led_color_t led_strip_buf_2[LED_STRIP_LENGTH];
-
 
 void main_led_task(void *args)
 {

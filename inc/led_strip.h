@@ -18,8 +18,19 @@ extern "C" {
 #include <driver/rmt.h>
 #include <driver/gpio.h>
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include <stddef.h>
+
+typedef enum effect_type_t {
+    RGB = 0,
+    FADE_IN_OFF,
+    ON_FADE_OFF,
+    BORDER_TO_CENTER,
+	CENTER_TO_BORDER,
+	COLOR,
+	NONE,
+}effect_type_t;
 
 enum rgb_led_type_t {
     RGB_LED_TYPE_WS2812 = 0,
@@ -27,6 +38,13 @@ enum rgb_led_type_t {
     RGB_LED_TYPE_APA106 = 2,
 
     RGB_LED_TYPE_MAX,
+};
+
+
+enum rgb_effect_states_t{
+    ALL_RED,
+    ALL_GREEN,
+    ALL_BLUE,
 };
 
 /**
@@ -39,30 +57,25 @@ struct led_color_t {
 };
 
 struct led_strip_t {
-    const enum rgb_led_type_t rgb_led_type;
-    const uint32_t led_strip_length;
-
-    // RMT peripheral settings
-    rmt_channel_t rmt_channel;
-
-    /*
-     * Interrupt table is located in soc.h
-     * As of 11/27/16, reccomended interrupts are:
-     * 9, 12, 13, 17, 18, 19, 20, 21 or 23
-     * Ensure that the same interrupt number isn't used twice
-     * across all libraries
-     */
-    int rmt_interrupt_num;
-
-    gpio_num_t gpio; // Must be less than GPIO_NUM_33
-
-    // Double buffering elements
-    bool showing_buf_1;
+    enum rgb_led_type_t rgb_led_type;
+    uint32_t led_strip_length;
+    rmt_channel_t rmt_channel;				    					// RMT peripheral settings
+    gpio_num_t gpio; 												// Must be less than GPIO_NUM_33
+    bool showing_buf_1;												// Double buffering elements
     struct led_color_t *led_strip_buf_1;
     struct led_color_t *led_strip_buf_2; 
-
     SemaphoreHandle_t access_semaphore;
 };
+
+struct led_strip_effect_t {
+	struct led_strip_t *led_strip;
+	effect_type_t effect_type;
+    uint8_t speed;
+    struct led_color_t *effect_color;
+    bool new_led_strip_effect_t;
+};
+
+extern TaskHandle_t led_strip_effect_task_handle;
 
 bool led_strip_init(struct led_strip_t *led_strip);
 
@@ -90,6 +103,21 @@ bool led_strip_show(struct led_strip_t *led_strip);
  * Clears the LED strip.
  */
 bool led_strip_clear(struct led_strip_t *led_strip);
+
+/**
+  * @brief     	Initialize task to create pre-defined effects
+  *
+  * @param 		led_strip_effect pointer to LED effect context
+  * @param 		effect_type enum for pre-defined effects
+  * @param 		effect_speed overall effect speed (based on visual effect for each pre-defined effect)
+  * @param 		led_color overall color of the effect
+  *
+  * @return
+  *      -ESP_OK 	On success
+  *      -ESP_FAIL 	Generic code indicating failure
+  *
+  **/
+esp_err_t led_strip_set_effect(struct led_strip_effect_t *led_strip_effect, effect_type_t effect_type, struct led_color_t *effect_color, uint8_t effect_speed);
 
 #ifdef __cplusplus
 }

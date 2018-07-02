@@ -1,0 +1,40 @@
+menu "ESP32 LED Strip Basic Example"
+
+choice RGB_LED_TYPE
+    prompt "LED Strip Model"
+    default WS2812
+    help
+        CPU frequency to be set on application startup.
+config WS2812
+    bool "WS2812"
+config SK6812
+    bool "SK6812"
+config APA106
+    bool "APA106"
+endchoice
+
+config RGB_LED_TYPE
+    int
+    default 0 if WS2812
+    default 1 if SK6812
+    default 2 if APA106
+
+config LED_STRIP_LENGTH
+    int "LED Strip Length"
+    default 10
+    help
+        Length of LED Strip.
+        
+config RMT_CHANNEL
+    int "RMT Channel from 0 to 7"
+    default 0
+    help
+        Choose RMT Channel from 0 to 7. Defaults to 0.
+        
+config GPIO_NUM
+    int "GPIO to use as LED Strip TX"
+    default 25
+    help
+        GPIO number from 0 to 32 to use as TX for the LED Strip.
+
+endmenu

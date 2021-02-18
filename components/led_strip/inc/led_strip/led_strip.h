@@ -18,6 +18,7 @@ extern "C" {
 #include <driver/rmt.h>
 #include <driver/gpio.h>
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #include <stddef.h>
 

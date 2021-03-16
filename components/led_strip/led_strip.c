@@ -236,7 +236,7 @@ static void led_strip_task(void *arg)
     };
 
     for(;;) {
-        rmt_wait_tx_done(led_strip->rmt_channel);
+        rmt_wait_tx_done(led_strip->rmt_channel, portMAX_DELAY);
         xSemaphoreTake(led_strip->access_semaphore, portMAX_DELAY);
 
         /*
